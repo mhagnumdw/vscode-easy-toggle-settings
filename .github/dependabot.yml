@@ -9,7 +9,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
     ignore:
       - dependency-name: "@types/vscode"
         versions: [">=1.80.0"]
@@ -18,4 +18,4 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
