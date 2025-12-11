@@ -23,6 +23,18 @@ suite('Extension Test Suite', () => {
     sinon.reset();
   });
 
+  test('Toggle array/object settings', async () => {
+    await extension.addToggle('editor.rulers', 'symbol-ruler', [[], [80]]);
+
+    // Default value for editor.rulers is [], so first click should set it to [80]
+    await extension.click('editor.rulers');
+    assert.deepStrictEqual(extension.getValueFromConf('editor.rulers'), [80]);
+
+    // Second click should set it back to []
+    await extension.click('editor.rulers');
+    assert.deepStrictEqual(extension.getValueFromConf('editor.rulers'), []);
+  });
+
   test('Extension activation', () => {
     const extension = vscode.extensions.getExtension(`mhagnumdw.${EXTENSION_NAME}`);
     assert.ok(extension, 'Extension should be defined');

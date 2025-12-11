@@ -167,7 +167,7 @@ export class ExtensionManager {
   private cycleSetting(setting: ToggleSetting, item: vscode.StatusBarItem) {
     const config = vscode.workspace.getConfiguration();
     const currentValue = config.get(setting.property);
-    const currentIndex = setting.values.indexOf(currentValue);
+    const currentIndex = setting.values.findIndex(value => JSON.stringify(value) === JSON.stringify(currentValue));
     const newValue = setting.values[(currentIndex + 1) % setting.values.length];
 
     config.update(setting.property, newValue, vscode.ConfigurationTarget.Global).then(() => {
