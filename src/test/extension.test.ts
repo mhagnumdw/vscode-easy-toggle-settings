@@ -64,6 +64,18 @@ suite('Extension Test Suite', () => {
     assert.strictEqual(items[0].property, 'editor.cursorStyle', 'Remaining setting should match');
   });
 
+  test('Toggle array/object settings', async () => {
+    await extension.addToggle('editor.rulers', 'symbol-ruler', [[], [80]]);
+
+    // Default value for editor.rulers is [], so first click should set it to [80]
+    await extension.click('editor.rulers');
+    assert.deepStrictEqual(extension.getValueFromConf('editor.rulers'), [80]);
+
+    // Second click should set it back to []
+    await extension.click('editor.rulers');
+    assert.deepStrictEqual(extension.getValueFromConf('editor.rulers'), []);
+  });
+
   test('Add duplicate toggle', async () => {
     const showWarningMessageSpy = sinon.spy(vscode.window, 'showWarningMessage');
 
