@@ -4,6 +4,10 @@ All notable changes to the "easy-toggle-settings" extension will be documented i
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.2.1
+
+- Fix: Unable to toggle settings with array/object values (PR #69)
+
 ## 1.2.0
 
 - Show a WARN message if there is a duplicate property (PR #20)
