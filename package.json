@@ -59,6 +59,9 @@
                 "description": "If true, the setting will be toggled at the workspace level instead of globally",
                 "default": false
               },
+              "disabledValue": {
+                "description": "If the setting reaches this value, the status bar icon will appear disabled/grayed out"
+              },
               "values": {
                 "type": "array",
                 "description": "List of possible values for this setting",
