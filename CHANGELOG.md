@@ -4,6 +4,10 @@ All notable changes to the "easy-toggle-settings" extension will be documented i
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.3.1
+
+- Docs: Update README to include `disabledValue` optional property
+
 ## 1.3.0
 
 - Feat: Add support for workspace-level setting toggles with the `isWorkspace` property (PR #80)

@@ -23,7 +23,7 @@ Install through VS Code extensions, searching for `Easy Toggle Settings`. Or go 
 
 For example, let's say we want to toggle these settings:
 
-- `editor.codeLens` between `true` and `false`
+- `editor.codeLens` between `true` and `false` (with the icon disabled when `false`)
 - `editor.renderWhitespace` between `"none"` and `"all"`
 - `java.autobuild.enabled` between `true` and `false` at the workspace level
 
@@ -34,7 +34,8 @@ Open global settings (`Ctrl Shift P > Open user settings json`) and add at the e
   {
     "property": "editor.codeLens",
     "icon": "eye",
-    "values": [true, false]
+    "values": [true, false],
+    "disabledValue": false // Optional
   },
   {
     "property": "editor.renderWhitespace",
@@ -45,7 +46,7 @@ Open global settings (`Ctrl Shift P > Open user settings json`) and add at the e
     "property": "java.autobuild.enabled",
     "icon": "rocket",
     "values": [true, false],
-    "isWorkspace": true
+    "isWorkspace": true // Optional
   }
 ]
 ```
