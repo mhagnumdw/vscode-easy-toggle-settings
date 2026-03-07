@@ -54,6 +54,11 @@
                 "type": "string",
                 "description": "Codicon icon name (e.g., eye, settings, debug)"
               },
+              "isWorkspace": {
+                "type": "boolean",
+                "description": "If true, the setting will be toggled at the workspace level instead of globally",
+                "default": false
+              },
               "values": {
                 "type": "array",
                 "description": "List of possible values for this setting",

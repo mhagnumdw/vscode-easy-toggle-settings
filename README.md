@@ -25,6 +25,7 @@ For example, let's say we want to toggle these settings:
 
 - `editor.codeLens` between `true` and `false`
 - `editor.renderWhitespace` between `"none"` and `"all"`
+- `java.autobuild.enabled` between `true` and `false` at the workspace level
 
 Open global settings (`Ctrl Shift P > Open user settings json`) and add at the end:
 
@@ -39,6 +40,12 @@ Open global settings (`Ctrl Shift P > Open user settings json`) and add at the e
     "property": "editor.renderWhitespace",
     "icon": "whitespace",
     "values": ["none", "all"]
+  },
+  {
+    "property": "java.autobuild.enabled",
+    "icon": "rocket",
+    "values": [true, false],
+    "isWorkspace": true
   }
 ]
 ```
@@ -63,6 +70,7 @@ This extension contributes the following settings:
   - `property` (`string`): Full name of any vscode setting (e.g., `editor.codeLens`)
   - `icon` (`string`): [Codicon](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing) icon name (e.g., `eye`, `whitespace`)
   - `values` (`array`): At least two unique values to cycle through
+  - `isWorkspace` (`boolean`, optional): Toggles the setting at the workspace level instead of globally (default: `false`)
 
 ## Release Notes
 
