@@ -18,6 +18,8 @@ export interface ToggleSetting {
   values: any[];
   /** The icon to display in the status bar */
   icon: string;
+  /** If true, the setting will be toggled at the workspace level */
+  isWorkspace?: boolean;
 }
 
 /**
@@ -170,7 +172,9 @@ export class ExtensionManager {
     const currentIndex = setting.values.findIndex(value => JSON.stringify(value) === JSON.stringify(currentValue));
     const newValue = setting.values[(currentIndex + 1) % setting.values.length];
 
-    config.update(setting.property, newValue, vscode.ConfigurationTarget.Global).then(() => {
+    const target = setting.isWorkspace ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+
+    config.update(setting.property, newValue, target).then(() => {
       this.updateStatusBarItem(setting, item);
     }, (err) => {
       const msg = `Failed to update setting ${setting.property}: ${err}`;

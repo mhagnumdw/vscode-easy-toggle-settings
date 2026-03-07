@@ -76,6 +76,19 @@ suite('Extension Test Suite', () => {
     assert.deepStrictEqual(extension.getValueFromConf('editor.rulers'), []);
   });
 
+  test('Add workspace toggle and rotate it', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"], true);
+
+    await extension.click('editor.renderWhitespace');
+    assert.strictEqual(extension.getWorkspaceValueFromConf('editor.renderWhitespace'), 'none');
+
+    await extension.click('editor.renderWhitespace');
+    assert.strictEqual(extension.getWorkspaceValueFromConf('editor.renderWhitespace'), 'all');
+
+    await extension.click('editor.renderWhitespace');
+    assert.strictEqual(extension.getWorkspaceValueFromConf('editor.renderWhitespace'), 'none');
+  });
+
   test('Add duplicate toggle', async () => {
     const showWarningMessageSpy = sinon.spy(vscode.window, 'showWarningMessage');
 
@@ -155,9 +168,9 @@ suite('Extension Test Suite', () => {
 class TestExtensionManager {
 
   /** Simulate the user adding a toggle */
-  async addToggle(property: string, icon: string, values: any[]) {
+  async addToggle(property: string, icon: string, values: any[], isWorkspace?: boolean) {
     const items: ToggleSetting[] = this.config.get('items') || [];
-    items.push({ property, icon, values });
+    items.push({ property, icon, values, isWorkspace });
     await this.config.update('items', items, vscode.ConfigurationTarget.Global);
   }
 
@@ -188,6 +201,12 @@ class TestExtensionManager {
     return vscode.workspace.getConfiguration().get(property);
   }
 
+  /** Get the workspace value of a property from the configuration */
+  getWorkspaceValueFromConf(property: string): unknown {
+    const configData = vscode.workspace.getConfiguration().inspect(property);
+    return configData?.workspaceValue;
+  }
+
   /** Get the all status bar items */
   getAllTogglesFromConf(): ToggleSetting[] {
     return this.config.get('items') as ToggleSetting[];
@@ -198,6 +217,14 @@ class TestExtensionManager {
     // TODO: how to clear `EXTENSION_NAME` property all at once instead of one by one?
     await this.config.update('items', undefined, vscode.ConfigurationTarget.Global);
     await this.config.update('enabled', undefined, vscode.ConfigurationTarget.Global);
+    
+    // Clear any test property configured in tests to not affect other tests
+    await vscode.workspace.getConfiguration().update('editor.renderWhitespace', undefined, vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace.getConfiguration().update('editor.renderWhitespace', undefined, vscode.ConfigurationTarget.Global);
+    await vscode.workspace.getConfiguration().update('editor.cursorStyle', undefined, vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace.getConfiguration().update('editor.cursorStyle', undefined, vscode.ConfigurationTarget.Global);
+    await vscode.workspace.getConfiguration().update('editor.rulers', undefined, vscode.ConfigurationTarget.Workspace);
+    await vscode.workspace.getConfiguration().update('editor.rulers', undefined, vscode.ConfigurationTarget.Global);
   }
 
   /** Get the configuration for the extension */

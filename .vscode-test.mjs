@@ -12,6 +12,7 @@ console.log(`Using temporary user data directory for vscode: ${tempUserDataDir}`
 
 export default defineConfig({
   files: 'out/test/**/*.test.js',
+  workspaceFolder: 'out/test-workspace',
   launchArgs: [
     '--user-data-dir=' + tempUserDataDir,
   ],
