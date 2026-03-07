@@ -186,8 +186,9 @@ export class ExtensionManager {
   private updateStatusBarItem(setting: ToggleSetting, item: vscode.StatusBarItem) {
     const config = vscode.workspace.getConfiguration();
     const value = config.get(setting.property);
+    const suffix = setting.isWorkspace ? ' (workspace)' : '';
     item.text = `$(${setting.icon})`;
-    item.tooltip = `${setting.property}: ${value}`;
+    item.tooltip = `${setting.property}: ${value}${suffix}`;
     item.show();
   }
 
