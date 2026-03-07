@@ -100,6 +100,7 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "@types/sinon": "^21.0.0",
+    "ovsx": "^0.10.9",
     "sinon": "^21.0.2",
     "@vscode/vsce": "^3.7.1"
   }
