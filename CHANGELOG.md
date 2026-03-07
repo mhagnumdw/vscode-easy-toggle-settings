@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Feat: Add support for workspace-level setting toggles with the `isWorkspace` property (PR #80)
 - Feat: Add `disabledValue` property to gray out the status bar item when a specific value is reached (PR #81)
+- ci: Add Open VSX Registry publishing to the release workflow (PR #82)
 
 ## 1.2.1
 
