@@ -7,7 +7,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 1.3.0
 
 - Feat: Add support for workspace-level setting toggles with the `isWorkspace` property (PR #80)
-- Feat: Add `disabledValue` property to gray out the status bar item when a specific value is reached
+- Feat: Add `disabledValue` property to gray out the status bar item when a specific value is reached (PR #81)
 
 ## 1.2.1
 
