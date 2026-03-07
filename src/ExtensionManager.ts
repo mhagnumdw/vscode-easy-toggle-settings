@@ -20,6 +20,8 @@ export interface ToggleSetting {
   icon: string;
   /** If true, the setting will be toggled at the workspace level */
   isWorkspace?: boolean;
+  /** If the setting reaches this value, the status bar item will appear grayed out */
+  disabledValue?: any;
 }
 
 /**
@@ -189,6 +191,13 @@ export class ExtensionManager {
     const suffix = setting.isWorkspace ? ' (workspace)' : '';
     item.text = `$(${setting.icon})`;
     item.tooltip = `${setting.property}: ${value}${suffix}`;
+
+    if (setting.disabledValue !== undefined && JSON.stringify(value) === JSON.stringify(setting.disabledValue)) {
+      item.color = new vscode.ThemeColor('disabledForeground');
+    } else {
+      item.color = undefined;
+    }
+
     item.show();
   }
 

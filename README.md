@@ -71,6 +71,7 @@ This extension contributes the following settings:
   - `icon` (`string`): [Codicon](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing) icon name (e.g., `eye`, `whitespace`)
   - `values` (`array`): At least two unique values to cycle through
   - `isWorkspace` (`boolean`, optional): Toggles the setting at the workspace level instead of globally (default: `false`)
+  - `disabledValue` (`any`, optional): If the setting reaches this value (must be one of the `values`), the status bar icon will appear disabled/grayed out
 
 ## Release Notes
 

@@ -89,6 +89,16 @@ suite('Extension Test Suite', () => {
     assert.strictEqual(extension.getWorkspaceValueFromConf('editor.renderWhitespace'), 'none');
   });
 
+  test('Add toggle with disabledValue', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"], false, "none");
+
+    await extension.click('editor.renderWhitespace');
+    assert.strictEqual(extension.getValueFromConf('editor.renderWhitespace'), 'none');
+
+    await extension.click('editor.renderWhitespace');
+    assert.strictEqual(extension.getValueFromConf('editor.renderWhitespace'), 'all');
+  });
+
   test('Add duplicate toggle', async () => {
     const showWarningMessageSpy = sinon.spy(vscode.window, 'showWarningMessage');
 
@@ -168,9 +178,9 @@ suite('Extension Test Suite', () => {
 class TestExtensionManager {
 
   /** Simulate the user adding a toggle */
-  async addToggle(property: string, icon: string, values: any[], isWorkspace?: boolean) {
+  async addToggle(property: string, icon: string, values: any[], isWorkspace?: boolean, disabledValue?: any) {
     const items: ToggleSetting[] = this.config.get('items') || [];
-    items.push({ property, icon, values, isWorkspace });
+    items.push({ property, icon, values, isWorkspace, disabledValue });
     await this.config.update('items', items, vscode.ConfigurationTarget.Global);
   }
 
