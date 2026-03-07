@@ -4,6 +4,10 @@ All notable changes to the "easy-toggle-settings" extension will be documented i
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.3.0
+
+- Feat: Add support for workspace-level setting toggles with the `isWorkspace` property (PR #80)
+
 ## 1.2.1
 
 - Fix: Unable to toggle settings with array/object values (PR #69)
