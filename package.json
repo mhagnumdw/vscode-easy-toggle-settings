@@ -101,7 +101,7 @@
     "@vscode/test-electron": "^2.5.2",
     "@types/sinon": "^21.0.0",
     "ovsx": "^0.10.10",
-    "sinon": "^21.0.2",
+    "sinon": "^22.0.0",
     "@vscode/vsce": "^3.7.1"
   }
 }
