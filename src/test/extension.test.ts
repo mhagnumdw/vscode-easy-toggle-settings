@@ -168,6 +168,20 @@ suite('Extension Test Suite', () => {
     sinon.assert.calledWith(showInformationMessageSpy, `Extension ${EXTENSION_NAME} is enabled.`);
   });
 
+  test('Do not accumulate subscriptions when recreating items or toggling the extension', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    const initialSubscriptions = ExtensionManager.getInstance().totalSubscriptions;
+
+    await extension.addToggle('editor.cursorStyle', 'cursor', ["line", "block"]);
+    await extension.disableExtension();
+    await extension.enableExtension();
+    await extension.disableExtension();
+    await extension.enableExtension();
+
+    assert.strictEqual(ExtensionManager.getInstance().totalStatusBarItems, 2, 'There should be two status bar items');
+    assert.strictEqual(ExtensionManager.getInstance().totalSubscriptions, initialSubscriptions, 'Subscriptions should not grow');
+  });
+
   test('cycleSetting: error on update property value', async () => {
     await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
 

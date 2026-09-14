@@ -55,6 +55,10 @@ export class ExtensionManager {
       this.activate();
     }
 
+    // status bar items, their commands and the items listener are recreated at runtime,
+    // so they are tracked internally and disposed all at once when the extension is deactivated
+    context.subscriptions.push(new vscode.Disposable(() => this.deactivate()));
+
     // monitor the enabled property
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration(ENABLED_PROPERTY)) {
@@ -103,11 +107,11 @@ export class ExtensionManager {
         }
       });
     });
-    this.context.subscriptions.push(this.itemsChangeSubscription);
   }
 
   private deactivate() {
     this.itemsChangeSubscription?.dispose();
+    this.itemsChangeSubscription = undefined;
     this.removeAllStatusBarItems();
   }
 
@@ -159,7 +163,6 @@ export class ExtensionManager {
 
     const command = vscode.commands
       .registerCommand(statusBarItem.command, () => this.cycleSetting(setting, statusBarItem));
-    this.context.subscriptions.push(command);
 
     this.statusBarItems.set(statusBarItem.command, {item: setting, statusBarItem, disposables: [ statusBarItem, command ]});
     return statusBarItem;
@@ -214,6 +217,10 @@ export class ExtensionManager {
 
   get allStatusBarItems(): ToggleSetting[] {
     return Array.from(this.statusBarItems.values()).map(i => i.item);
+  }
+
+  get totalSubscriptions(): number {
+    return this.context.subscriptions.length;
   }
 
   getStatusBarItem(property: string): vscode.StatusBarItem | undefined {
