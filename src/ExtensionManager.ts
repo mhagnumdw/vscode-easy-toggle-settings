@@ -41,9 +41,9 @@ export class ExtensionManager {
    *
    * @remarks
    * - The map key is the command ID
-   * - The value contains ToggleSetting and disposables associated with each status bar item
+   * - The value contains ToggleSetting, the status bar item and disposables associated with it
    */
-  private statusBarItems: Map<string, {item: ToggleSetting, disposables: DisposableLike[] }> = new Map();
+  private statusBarItems: Map<string, {item: ToggleSetting, statusBarItem: vscode.StatusBarItem, disposables: DisposableLike[] }> = new Map();
 
   private itemsChangeSubscription?: vscode.Disposable;
 
@@ -94,7 +94,14 @@ export class ExtensionManager {
     this.itemsChangeSubscription = vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration(ITEMS_PROPERTY)) {
         this.createAllStatusBarItems();
+        return;
       }
+      // refresh items whose setting was changed outside the extension (settings.json, Settings UI, etc.)
+      this.statusBarItems.forEach(({ item, statusBarItem }) => {
+        if (event.affectsConfiguration(item.property)) {
+          this.updateStatusBarItem(item, statusBarItem);
+        }
+      });
     });
     this.context.subscriptions.push(this.itemsChangeSubscription);
   }
@@ -154,7 +161,7 @@ export class ExtensionManager {
       .registerCommand(statusBarItem.command, () => this.cycleSetting(setting, statusBarItem));
     this.context.subscriptions.push(command);
 
-    this.statusBarItems.set(statusBarItem.command, {item: setting, disposables: [ statusBarItem, command ]});
+    this.statusBarItems.set(statusBarItem.command, {item: setting, statusBarItem, disposables: [ statusBarItem, command ]});
     return statusBarItem;
   }
 
@@ -207,6 +214,10 @@ export class ExtensionManager {
 
   get allStatusBarItems(): ToggleSetting[] {
     return Array.from(this.statusBarItems.values()).map(i => i.item);
+  }
+
+  getStatusBarItem(property: string): vscode.StatusBarItem | undefined {
+    return this.statusBarItems.get(ExtensionManager.getCommandId(property))?.statusBarItem;
   }
 
   private exists(property: string): boolean {

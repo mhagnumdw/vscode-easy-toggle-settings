@@ -99,6 +99,20 @@ suite('Extension Test Suite', () => {
     assert.strictEqual(extension.getValueFromConf('editor.renderWhitespace'), 'all');
   });
 
+  test('Refresh status bar item when setting changes externally', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"], false, "none");
+    const item = ExtensionManager.getInstance().getStatusBarItem('editor.renderWhitespace');
+    assert.ok(item, 'Status bar item should exist');
+
+    await extension.setValue('editor.renderWhitespace', 'all');
+    assert.strictEqual(item.tooltip, 'editor.renderWhitespace: all');
+    assert.strictEqual(item.color, undefined, 'Item should not be grayed out');
+
+    await extension.setValue('editor.renderWhitespace', 'none');
+    assert.strictEqual(item.tooltip, 'editor.renderWhitespace: none');
+    assert.deepStrictEqual(item.color, new vscode.ThemeColor('disabledForeground'), 'Item should be grayed out');
+  });
+
   test('Add duplicate toggle', async () => {
     const showWarningMessageSpy = sinon.spy(vscode.window, 'showWarningMessage');
 
@@ -204,6 +218,13 @@ class TestExtensionManager {
     const commandId = ExtensionManager.getCommandId(property);
     await vscode.commands.executeCommand(commandId);
     wait && await waitForConfigChange(property);
+  }
+
+  /** Simulate the user changing a setting outside the extension */
+  async setValue(property: string, value: unknown) {
+    const changed = waitForConfigChange(property);
+    await vscode.workspace.getConfiguration().update(property, value, vscode.ConfigurationTarget.Global);
+    await changed;
   }
 
   /** Get the value of a property from the configuration */
