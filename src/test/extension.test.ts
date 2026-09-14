@@ -8,6 +8,8 @@ suite('Extension Test Suite', () => {
   let extension: TestExtensionManager;
 
   suiteSetup(async () => {
+    // the extension activates on startup finished, which may happen after the tests start
+    await vscode.extensions.getExtension(`mhagnumdw.${EXTENSION_NAME}`)?.activate();
     extension = new TestExtensionManager();
     vscode.window.showInformationMessage('Start all tests.');
   });
@@ -27,6 +29,7 @@ suite('Extension Test Suite', () => {
     const extension = vscode.extensions.getExtension(`mhagnumdw.${EXTENSION_NAME}`);
     assert.ok(extension, 'Extension should be defined');
     assert.strictEqual(extension?.isActive, true, 'Extension should be active');
+    assert.deepStrictEqual(extension?.packageJSON.activationEvents, ['onStartupFinished'], 'Extension should activate without slowing down startup');
   });
 
   test('Toggles should be empty at start', () => {
