@@ -25,6 +25,22 @@ export interface ToggleSetting {
 }
 
 /**
+ * Compare setting values by content, so arrays and objects are matched correctly.
+ */
+export function isSameValue(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Get the value that follows `currentValue` in `values`, wrapping around at the end.
+ * If `currentValue` is not one of the `values`, the first value is returned.
+ */
+export function getNextValue(values: unknown[], currentValue: unknown): unknown {
+  const currentIndex = values.findIndex(value => isSameValue(value, currentValue));
+  return values[(currentIndex + 1) % values.length];
+}
+
+/**
  * Represents a disposable object we need to manage.
  */
 type DisposableLike = vscode.Disposable | vscode.StatusBarItem;
@@ -162,7 +178,7 @@ export class ExtensionManager {
     statusBarItem.command = ExtensionManager.getCommandId(setting.property);
 
     const command = vscode.commands
-      .registerCommand(statusBarItem.command, () => this.cycleSetting(setting, statusBarItem));
+      .registerCommand(statusBarItem.command, () => this.cycleSetting(setting));
 
     this.statusBarItems.set(statusBarItem.command, {item: setting, statusBarItem, disposables: [ statusBarItem, command ]});
     return statusBarItem;
@@ -176,23 +192,23 @@ export class ExtensionManager {
   }
 
   /**
-   * Cycle through the values of the toggle setting and update the status bar item.
+   * Cycle the toggle setting to its next value.
+   *
+   * @remarks
+   * The status bar item is refreshed by the configuration change listener.
    */
-  private cycleSetting(setting: ToggleSetting, item: vscode.StatusBarItem) {
+  private async cycleSetting(setting: ToggleSetting): Promise<void> {
     const config = vscode.workspace.getConfiguration();
-    const currentValue = config.get(setting.property);
-    const currentIndex = setting.values.findIndex(value => JSON.stringify(value) === JSON.stringify(currentValue));
-    const newValue = setting.values[(currentIndex + 1) % setting.values.length];
-
+    const newValue = getNextValue(setting.values, config.get(setting.property));
     const target = setting.isWorkspace ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
 
-    config.update(setting.property, newValue, target).then(() => {
-      this.updateStatusBarItem(setting, item);
-    }, (err) => {
+    try {
+      await config.update(setting.property, newValue, target);
+    } catch (err) {
       const msg = `Failed to update setting ${setting.property}: ${err}`;
       console.error(msg, err);
       vscode.window.showErrorMessage(msg);
-    });
+    }
   }
 
   private updateStatusBarItem(setting: ToggleSetting, item: vscode.StatusBarItem) {
@@ -202,7 +218,7 @@ export class ExtensionManager {
     item.text = `$(${setting.icon})`;
     item.tooltip = `${setting.property}: ${value}${suffix}`;
 
-    if (setting.disabledValue !== undefined && JSON.stringify(value) === JSON.stringify(setting.disabledValue)) {
+    if (setting.disabledValue !== undefined && isSameValue(value, setting.disabledValue)) {
       item.color = new vscode.ThemeColor('disabledForeground');
     } else {
       item.color = undefined;

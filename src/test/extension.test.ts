@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { EXTENSION_NAME, ExtensionManager, ToggleSetting } from '../ExtensionManager';
+import { EXTENSION_NAME, ExtensionManager, ToggleSetting, getNextValue } from '../ExtensionManager';
 import * as sinon from 'sinon';
 
 suite('Extension Test Suite', () => {
@@ -200,6 +200,29 @@ suite('Extension Test Suite', () => {
 
 });
 
+suite('getNextValue', () => {
+
+  test('Return the next value', () => {
+    assert.strictEqual(getNextValue(['none', 'boundary', 'all'], 'none'), 'boundary');
+    assert.strictEqual(getNextValue(['none', 'boundary', 'all'], 'boundary'), 'all');
+  });
+
+  test('Wrap around to the first value', () => {
+    assert.strictEqual(getNextValue([true, false], false), true);
+  });
+
+  test('Return the first value when the current value is not in the list', () => {
+    assert.strictEqual(getNextValue(['none', 'all'], 'selection'), 'none');
+    assert.strictEqual(getNextValue(['none', 'all'], undefined), 'none');
+  });
+
+  test('Compare arrays and objects by content', () => {
+    assert.deepStrictEqual(getNextValue([[], [80]], []), [80]);
+    assert.deepStrictEqual(getNextValue([{ a: 1 }, { a: 2 }], { a: 2 }), { a: 1 });
+  });
+
+});
+
 /**
  * Class to manage the extension settings and simulate user actions.
  */
@@ -230,8 +253,10 @@ class TestExtensionManager {
   /** Simulate the user clicking the status bar item */
   async click(property: string, wait = true) {
     const commandId = ExtensionManager.getCommandId(property);
+    // listen before executing, since the command resolves only after the setting is updated
+    const changed = wait ? waitForConfigChange(property) : Promise.resolve();
     await vscode.commands.executeCommand(commandId);
-    wait && await waitForConfigChange(property);
+    await changed;
   }
 
   /** Simulate the user changing a setting outside the extension */
