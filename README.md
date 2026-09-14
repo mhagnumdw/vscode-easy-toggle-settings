@@ -59,6 +59,21 @@ After saving the settings, the icons will appear in the status bar. Each click w
 
 🎉 You can now do this for any VS Code setting! 🥳
 
+## Keyboard Shortcuts
+
+Each item in `easy-toggle-settings.items` also registers a command that can be bound to a keyboard shortcut. The command ID is `easy-toggle-settings.` followed by the item `property`.
+
+For example, to toggle `editor.renderWhitespace` with `Ctrl+Alt+W`, open `Ctrl Shift P > Preferences: Open Keyboard Shortcuts (JSON)` and add:
+
+```json
+{
+  "key": "ctrl+alt+w",
+  "command": "easy-toggle-settings.editor.renderWhitespace"
+}
+```
+
+> The command is only available while the item is present in `easy-toggle-settings.items` and the extension is enabled.
+
 ## Extension Settings
 
 This extension contributes the following settings:
