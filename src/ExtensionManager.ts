@@ -9,6 +9,13 @@ const ENABLED_PROPERTY = `${EXTENSION_NAME}.enabled`;
 const ITEMS_PROPERTY = `${EXTENSION_NAME}.items`;
 
 /**
+ * According to the `contributes.commands` in package.json
+ */
+export const TOGGLE_COMMAND = `${EXTENSION_NAME}.toggle`;
+
+const OPEN_SETTINGS_ACTION = 'Open Settings';
+
+/**
  * Represents a toggle setting in the extension.
  */
 export interface ToggleSetting {
@@ -38,6 +45,26 @@ export function isSameValue(a: unknown, b: unknown): boolean {
 export function getNextValue(values: unknown[], currentValue: unknown): unknown {
   const currentIndex = values.findIndex(value => isSameValue(value, currentValue));
   return values[(currentIndex + 1) % values.length];
+}
+
+/**
+ * Format a setting value for display, e.g. `"none"`, `true`, `[80]`.
+ */
+function formatValue(value: unknown): string {
+  return String(JSON.stringify(value));
+}
+
+/**
+ * Get the `property` from the toggle command arguments, or `undefined` if the arguments are invalid.
+ */
+function getPropertyArg(args: unknown): string | undefined {
+  if (typeof args === 'object' && args !== null && 'property' in args) {
+    const { property } = args;
+    if (typeof property === 'string' && property.trim() !== '') {
+      return property;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -74,6 +101,9 @@ export class ExtensionManager {
     // status bar items, their commands and the items listener are recreated at runtime,
     // so they are tracked internally and disposed all at once when the extension is deactivated
     context.subscriptions.push(new vscode.Disposable(() => this.deactivate()));
+
+    // generic command to cycle a configured setting from the Command Palette or a keybinding
+    context.subscriptions.push(vscode.commands.registerCommand(TOGGLE_COMMAND, (args?: unknown) => this.runToggleCommand(args)));
 
     // monitor the enabled property
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
@@ -211,6 +241,88 @@ export class ExtensionManager {
       console.error(msg, err);
       vscode.window.showErrorMessage(msg);
     }
+  }
+
+  /**
+   * Handle the generic toggle command.
+   *
+   * @remarks
+   * - Without arguments (e.g. from the Command Palette), a Quick Pick lets the user choose the setting
+   * - With `{ "property": "<setting name>" }` (e.g. from a keybinding), that configured setting is cycled
+   */
+  private async runToggleCommand(args?: unknown): Promise<void> {
+    if (!this.enabled) {
+      vscode.window.showWarningMessage(`Extension ${EXTENSION_NAME} is disabled.`);
+      return;
+    }
+
+    if (args === undefined) {
+      const setting = await this.pickSetting();
+      if (setting) {
+        await this.cycleSetting(setting);
+      }
+      return;
+    }
+
+    const property = getPropertyArg(args);
+    if (!property) {
+      vscode.window.showErrorMessage(`Invalid arguments for ${TOGGLE_COMMAND}. Expected: { "property": "<setting name>" }.`);
+      return;
+    }
+
+    const setting = this.statusBarItems.get(ExtensionManager.getCommandId(property))?.item;
+    if (!setting) {
+      this.showMessageWithOpenSettings(
+        vscode.window.showWarningMessage(`The property ${property} is not configured in ${ITEMS_PROPERTY}.`, OPEN_SETTINGS_ACTION)
+      );
+      return;
+    }
+
+    await this.cycleSetting(setting);
+  }
+
+  /**
+   * Show a Quick Pick with the configured settings, including their current and next values.
+   */
+  private async pickSetting(): Promise<ToggleSetting | undefined> {
+    const settings = this.allStatusBarItems;
+    if (settings.length === 0) {
+      this.showMessageWithOpenSettings(
+        vscode.window.showInformationMessage(`No settings configured in ${ITEMS_PROPERTY}.`, OPEN_SETTINGS_ACTION)
+      );
+      return undefined;
+    }
+
+    const config = vscode.workspace.getConfiguration();
+    const picks = settings.map(setting => {
+      const value = config.get(setting.property);
+      const suffix = setting.isWorkspace ? ' (workspace)' : '';
+      return {
+        label: `$(${setting.icon}) ${setting.property}`,
+        description: `${formatValue(value)} → ${formatValue(getNextValue(setting.values, value))}${suffix}`,
+        setting,
+      };
+    });
+
+    const picked = await vscode.window.showQuickPick(picks, {
+      title: 'Easy Toggle Settings',
+      placeHolder: 'Select a setting to toggle',
+    });
+    return picked?.setting;
+  }
+
+  /**
+   * Open the extension settings if the user chooses the action of the message.
+   *
+   * @remarks
+   * Not awaited by the callers, so a command does not stay pending until the notification is dismissed.
+   */
+  private showMessageWithOpenSettings(message: Thenable<string | undefined>): void {
+    message.then(action => {
+      if (action === OPEN_SETTINGS_ACTION) {
+        vscode.commands.executeCommand('workbench.action.openSettings', ITEMS_PROPERTY);
+      }
+    });
   }
 
   private updateStatusBarItem(setting: ToggleSetting, item: vscode.StatusBarItem) {

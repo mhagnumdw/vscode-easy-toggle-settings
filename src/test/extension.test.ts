@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { EXTENSION_NAME, ExtensionManager, ToggleSetting, getNextValue } from '../ExtensionManager';
+import { EXTENSION_NAME, ExtensionManager, TOGGLE_COMMAND, ToggleSetting, getNextValue } from '../ExtensionManager';
 import * as sinon from 'sinon';
 
 suite('Extension Test Suite', () => {
@@ -195,6 +195,106 @@ suite('Extension Test Suite', () => {
     assert.strictEqual(ExtensionManager.getInstance().totalSubscriptions, initialSubscriptions, 'Subscriptions should not grow');
   });
 
+  test('Toggle command is contributed and registered', async () => {
+    const packageJSON = vscode.extensions.getExtension(`mhagnumdw.${EXTENSION_NAME}`)?.packageJSON;
+    const contributed = packageJSON.contributes.commands.some((c: { command: string }) => c.command === TOGGLE_COMMAND);
+    assert.ok(contributed, 'Command should be contributed in package.json');
+
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes(TOGGLE_COMMAND), 'Command should be registered');
+  });
+
+  test('Toggle command cycles the property passed as argument', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+
+    await extension.runToggleCommand({ property: 'editor.renderWhitespace' }, 'editor.renderWhitespace');
+    assert.strictEqual(extension.getValueFromConf('editor.renderWhitespace'), 'none');
+
+    await extension.runToggleCommand({ property: 'editor.renderWhitespace' }, 'editor.renderWhitespace');
+    assert.strictEqual(extension.getValueFromConf('editor.renderWhitespace'), 'all');
+  });
+
+  test('Toggle command without arguments shows a Quick Pick and cycles the picked setting', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    await extension.addToggle('editor.cursorStyle', 'cursor', ["line", "block"], true);
+    await extension.setValue('editor.renderWhitespace', 'all');
+    await extension.setValue('editor.cursorStyle', 'block');
+    const showQuickPickStub = sinon.stub(vscode.window, 'showQuickPick')
+      .callsFake((async (items: any) => (await items)[1]) as any);
+
+    await extension.runToggleCommand(undefined, 'editor.cursorStyle');
+
+    const picks = showQuickPickStub.firstCall.args[0] as { label: string, description: string }[];
+    assert.deepStrictEqual(picks.map(p => [p.label, p.description]), [
+      ['$(whitespace) editor.renderWhitespace', '"all" → "none"'],
+      ['$(cursor) editor.cursorStyle', '"block" → "line" (workspace)'],
+    ]);
+    assert.strictEqual(extension.getWorkspaceValueFromConf('editor.cursorStyle'), 'line');
+  });
+
+  test('Toggle command does nothing when the Quick Pick is cancelled', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    sinon.stub(vscode.window, 'showQuickPick').resolves(undefined);
+
+    await extension.runToggleCommand();
+
+    assert.strictEqual(extension.getGlobalValueFromConf('editor.renderWhitespace'), undefined);
+  });
+
+  test('Toggle command without configured items shows a message', async () => {
+    const showInformationMessageStub = sinon.stub(vscode.window, 'showInformationMessage').resolves(undefined);
+    const showQuickPickSpy = sinon.spy(vscode.window, 'showQuickPick');
+
+    await extension.runToggleCommand();
+
+    assert.deepStrictEqual(showInformationMessageStub.firstCall.args, [`No settings configured in ${EXTENSION_NAME}.items.`, 'Open Settings']);
+    sinon.assert.notCalled(showQuickPickSpy);
+  });
+
+  test('Toggle command with an unconfigured property shows a warning', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    const showWarningMessageStub = sinon.stub(vscode.window, 'showWarningMessage').resolves(undefined);
+
+    await extension.runToggleCommand({ property: 'editor.cursorStyle' });
+
+    assert.deepStrictEqual(showWarningMessageStub.firstCall.args, [`The property editor.cursorStyle is not configured in ${EXTENSION_NAME}.items.`, 'Open Settings']);
+    assert.strictEqual(extension.getGlobalValueFromConf('editor.cursorStyle'), undefined);
+  });
+
+  test('Toggle command opens the settings from the message action', async () => {
+    const showWarningMessageStub = sinon.stub(vscode.window, 'showWarningMessage').resolves('Open Settings' as any);
+    const executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').callThrough();
+    executeCommandStub.withArgs('workbench.action.openSettings').resolves();
+
+    await extension.runToggleCommand({ property: 'editor.cursorStyle' });
+    await showWarningMessageStub.firstCall.returnValue;
+
+    sinon.assert.calledWith(executeCommandStub, 'workbench.action.openSettings', `${EXTENSION_NAME}.items`);
+  });
+
+  test('Toggle command with invalid arguments shows an error', async () => {
+    const showErrorMessageStub = sinon.stub(vscode.window, 'showErrorMessage').resolves(undefined);
+    const invalidArgs = [{}, { property: 1 }, { property: ' ' }, 'editor.renderWhitespace', null];
+
+    for (const args of invalidArgs) {
+      await extension.runToggleCommand(args);
+    }
+
+    assert.strictEqual(showErrorMessageStub.callCount, invalidArgs.length);
+    sinon.assert.alwaysCalledWith(showErrorMessageStub, `Invalid arguments for ${TOGGLE_COMMAND}. Expected: { "property": "<setting name>" }.`);
+  });
+
+  test('Toggle command warns when the extension is disabled', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    await extension.disableExtension();
+    const showWarningMessageStub = sinon.stub(vscode.window, 'showWarningMessage').resolves(undefined);
+
+    await extension.runToggleCommand({ property: 'editor.renderWhitespace' });
+
+    sinon.assert.calledWith(showWarningMessageStub, `Extension ${EXTENSION_NAME} is disabled.`);
+    assert.strictEqual(extension.getGlobalValueFromConf('editor.renderWhitespace'), undefined);
+  });
+
   test('cycleSetting: error on update property value', async () => {
     await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
 
@@ -270,6 +370,18 @@ class TestExtensionManager {
     const changed = wait ? waitForConfigChange(property) : Promise.resolve();
     await vscode.commands.executeCommand(commandId);
     await changed;
+  }
+
+  /** Simulate the user running the generic toggle command, optionally waiting for a setting change */
+  async runToggleCommand(args?: unknown, waitProperty?: string) {
+    const changed = waitProperty ? waitForConfigChange(waitProperty) : Promise.resolve();
+    await vscode.commands.executeCommand(TOGGLE_COMMAND, ...(args === undefined ? [] : [args]));
+    await changed;
+  }
+
+  /** Get the global (user) value of a property from the configuration */
+  getGlobalValueFromConf(property: string): unknown {
+    return vscode.workspace.getConfiguration().inspect(property)?.globalValue;
   }
 
   /** Simulate the user changing a setting outside the extension */

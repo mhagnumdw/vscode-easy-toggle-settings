@@ -7,7 +7,7 @@
 
 ## Features
 
-Allows you to quickly and easily toggle any VS Code setting directly from the status bar.
+Allows you to quickly and easily toggle any VS Code setting from the status bar, the Command Palette or a keyboard shortcut.
 
 You choose which settings to toggle. A button is added to the status bar for each.
 
@@ -59,11 +59,20 @@ After saving the settings, the icons will appear in the status bar. Each click w
 
 🎉 You can now do this for any VS Code setting! 🥳
 
-## Keyboard Shortcuts
+## Command Palette and Keyboard Shortcuts
 
-Each item in `easy-toggle-settings.items` also registers a command that can be bound to a keyboard shortcut. The command ID is `easy-toggle-settings.` followed by the item `property`.
+- **Command Palette**: run `Easy Toggle Settings: Toggle Setting...` and pick one of your settings.
+- **Keyboard shortcut**: open `Ctrl Shift P > Preferences: Open Keyboard Shortcuts (JSON)` and add:
 
-For example, to toggle `editor.renderWhitespace` with `Ctrl+Alt+W`, open `Ctrl Shift P > Preferences: Open Keyboard Shortcuts (JSON)` and add:
+```json
+{
+  "key": "ctrl+alt+w",
+  "command": "easy-toggle-settings.toggle",
+  "args": { "property": "editor.renderWhitespace" }
+}
+```
+
+Or use the shorter form, where the command is `easy-toggle-settings.` followed by the `property`:
 
 ```json
 {
@@ -72,7 +81,7 @@ For example, to toggle `editor.renderWhitespace` with `Ctrl+Alt+W`, open `Ctrl S
 }
 ```
 
-> The command is only available while the item is present in `easy-toggle-settings.items` and the extension is enabled.
+> In both forms, the `property` must be configured in `easy-toggle-settings.items`.
 
 ## Extension Settings
 

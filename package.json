@@ -30,6 +30,21 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "easy-toggle-settings.toggle",
+        "title": "Toggle Setting...",
+        "category": "Easy Toggle Settings"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "easy-toggle-settings.toggle",
+          "when": "config.easy-toggle-settings.enabled"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Easy Toggle Settings",
