@@ -174,7 +174,9 @@ export class ExtensionManager {
   }
 
   private createStatusBarItem(setting: ToggleSetting): vscode.StatusBarItem {
-    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    // a unique id per item lets users hide each one individually from the status bar context menu
+    const statusBarItem = vscode.window.createStatusBarItem(setting.property, vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.name = `Easy Toggle Settings: ${setting.property}`;
     statusBarItem.command = ExtensionManager.getCommandId(setting.property);
 
     const command = vscode.commands

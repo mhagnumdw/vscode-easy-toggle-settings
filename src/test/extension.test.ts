@@ -113,6 +113,19 @@ suite('Extension Test Suite', () => {
     assert.deepStrictEqual(item.color, new vscode.ThemeColor('disabledForeground'), 'Item should be grayed out');
   });
 
+  test('Status bar items have a unique id and name', async () => {
+    await extension.addToggle('editor.renderWhitespace', 'whitespace', ["none", "all"]);
+    await extension.addToggle('editor.cursorStyle', 'cursor', ["line", "block"]);
+
+    const whitespaceItem = ExtensionManager.getInstance().getStatusBarItem('editor.renderWhitespace');
+    assert.strictEqual(whitespaceItem?.id, 'editor.renderWhitespace');
+    assert.strictEqual(whitespaceItem?.name, 'Easy Toggle Settings: editor.renderWhitespace');
+
+    const cursorItem = ExtensionManager.getInstance().getStatusBarItem('editor.cursorStyle');
+    assert.strictEqual(cursorItem?.id, 'editor.cursorStyle');
+    assert.strictEqual(cursorItem?.name, 'Easy Toggle Settings: editor.cursorStyle');
+  });
+
   test('Add duplicate toggle', async () => {
     const showWarningMessageSpy = sinon.spy(vscode.window, 'showWarningMessage');
 
