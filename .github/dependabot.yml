@@ -16,6 +16,7 @@ updates:
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
-    directory: "/"
+    # "/" covers .github/workflows; the glob covers the composite actions
+    directories: ["/", "/.github/actions/*"]
     schedule:
       interval: "quarterly"
