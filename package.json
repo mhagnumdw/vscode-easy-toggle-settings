@@ -10,13 +10,13 @@
     "color": "#D8EBFF",
     "theme": "light"
   },
-  "homepage": "https://github.com/mhagnumdw/vscode-setting-toggle",
+  "homepage": "https://github.com/mhagnumdw/vscode-easy-toggle-settings",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mhagnumdw/vscode-setting-toggle"
+    "url": "https://github.com/mhagnumdw/vscode-easy-toggle-settings"
   },
   "bugs": {
-    "url": "https://github.com/mhagnumdw/vscode-setting-toggle/issues"
+    "url": "https://github.com/mhagnumdw/vscode-easy-toggle-settings/issues"
   },
   "pricing": "Free",
   "engines": {
