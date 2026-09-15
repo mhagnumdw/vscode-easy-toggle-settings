@@ -12,6 +12,7 @@ vsc-extension-quickstart.md
 coverage
 out/test
 .tool-versions
+cliff.toml
 resources/**
 !resources/icon.png
 .github

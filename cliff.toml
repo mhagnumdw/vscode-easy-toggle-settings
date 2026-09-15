@@ -1,0 +1,52 @@
+# git-cliff ~ https://git-cliff.org/docs/configuration
+# CHANGELOG.md is generated on release (.github/workflows/release.yml). Do not edit it by hand.
+# Preview the next release: git cliff --unreleased --tag vX.Y.Z
+
+[changelog]
+# STATIC header: `--prepend` recognizes this block and inserts new releases right below it,
+# so it must match the top of CHANGELOG.md byte for byte (no template variables).
+header = """
+# Changelog
+
+> Generated automatically on release by git-cliff (`.github/workflows/release.yml`); dates in UTC; do not edit by hand.
+
+"""
+# One section per release: "## [vX.Y.Z](compare link) (YYYY-MM-DD)" + groups (### Added/Fixed/...) + bullets.
+body = """
+{% if version -%}
+    ## [{{ version }}]({% if previous.version %}<REPO>/compare/{{ previous.version }}...{{ version }}{% else %}<REPO>/tree/{{ version }}{% endif %}) ({{ timestamp | date(format="%Y-%m-%d") }})
+{% else -%}
+    ## Unreleased
+{% endif -%}
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {{ commit.raw_message | split(pat="\n") | first | trim }} ([{{ commit.id | truncate(length=8, end="") }}](<REPO>/commit/{{ commit.id }}))\
+    {% endfor %}
+{% endfor %}\n
+"""
+trim = true
+# Run on the rendered release only (the entries kept below the header are left untouched)
+postprocessors = [
+  # "(#123)" -> link to the pull request
+  { pattern = '\(#([0-9]+)\)', replace = "([#${1}](<REPO>/pull/${1}))" },
+  { pattern = '<REPO>', replace = "https://github.com/mhagnumdw/vscode-easy-toggle-settings" },
+]
+
+[git]
+conventional_commits = true
+# Keep every commit, even the ones that don't follow Conventional Commits (they go to "Other").
+filter_commits = false
+filter_unconventional = false
+sort_commits = "newest"
+commit_parsers = [
+    # Release commits (created by the release workflow) don't go into the changelog.
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^feat", group = "<!-- 0 -->Added" },
+    { message = "^fix", group = "<!-- 1 -->Fixed" },
+    { message = "^perf", group = "<!-- 2 -->Performance" },
+    { message = "^refactor", group = "<!-- 3 -->Changed" },
+    { message = "^docs", group = "<!-- 4 -->Docs" },
+    { message = "^ci|^build", group = "<!-- 5 -->CI/Build" },
+    { message = ".*", group = "<!-- 9 -->Other" },
+]
