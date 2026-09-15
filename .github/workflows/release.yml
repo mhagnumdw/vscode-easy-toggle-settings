@@ -19,6 +19,8 @@ jobs:
           fi
 
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # git-cliff needs the full history and the tags
 
       - name: Setup, Test and Package
         uses: ./.github/actions/common-tasks
@@ -30,9 +32,31 @@ jobs:
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
 
+      - name: Bump version
+        run: npm version "$VERSION" --no-git-tag-version
+        env:
+          VERSION: ${{ inputs.version }}
+
+      - name: Update CHANGELOG
+        uses: orhun/git-cliff-action@v4
+        with:
+          args: --unreleased --prepend CHANGELOG.md
+        env:
+          GIT_CLIFF_TAG: v${{ inputs.version }}
+          # Outside the workspace, otherwise the action's default output ends up inside the VSIX
+          OUTPUT: ${{ runner.temp }}/cliff-output.md
+
+      - name: Commit and tag the release
+        run: |
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): v$VERSION [skip ci]"
+          git tag -a "v$VERSION" -m "chore(release): v$VERSION [skip ci]"
+        env:
+          VERSION: ${{ inputs.version }}
+
       - name: Publish to VS Code Marketplace
         run: |
-          npx vsce publish --message "chore(release): v${{ inputs.version }} [skip ci]" ${{ inputs.version }}
+          npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -49,11 +73,19 @@ jobs:
           tags: true
           branch: ${{ github.ref }}
 
+      - name: Generate release notes
+        id: release-notes
+        uses: orhun/git-cliff-action@v4
+        with:
+          args: --latest --strip all
+        env:
+          OUTPUT: ${{ runner.temp }}/RELEASE_NOTES.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: "v${{ inputs.version }}"
           name: "v${{ inputs.version }}"
-          body: "See [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
+          body: ${{ steps.release-notes.outputs.content }}
           draft: false
           prerelease: false

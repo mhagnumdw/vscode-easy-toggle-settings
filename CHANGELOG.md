@@ -1,8 +1,6 @@
-# Change Log
+# Changelog
 
-All notable changes to the "easy-toggle-settings" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+> Generated automatically on release by git-cliff (`.github/workflows/release.yml`); dates in UTC; do not edit by hand.
 
 ## 1.3.1
 
