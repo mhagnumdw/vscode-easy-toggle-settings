@@ -10,6 +10,9 @@ updates:
     directory: "/"
     schedule:
       interval: "quarterly"
+    # Let a release settle before proposing it (GitHub defaults to 3 days)
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "@types/vscode"
         versions: [">=1.80.0"]
@@ -20,3 +23,5 @@ updates:
     directories: ["/", "/.github/actions/*"]
     schedule:
       interval: "quarterly"
+    cooldown:
+      default-days: 7
