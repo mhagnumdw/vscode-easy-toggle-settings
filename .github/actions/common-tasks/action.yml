@@ -37,7 +37,7 @@ runs:
       npx vsce ls --tree
       npx vsce package
 
-  - uses: actions/upload-artifact@v4
+  - uses: actions/upload-artifact@v7
     with:
       name: easy-toggle-settings-artifacts
       path: easy-toggle-settings-*.vsix
