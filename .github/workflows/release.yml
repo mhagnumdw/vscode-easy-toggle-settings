@@ -7,9 +7,14 @@ on:
         description: 'Semantic version (X.Y.Z)'
         required: true
 
+# No token for any job unless it asks for it
+permissions: {}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the release commit and tag, create the GitHub Release
     # Never interpolate ${{ inputs.version }} inside run:, it would run as shell code
     env:
       VERSION: ${{ inputs.version }}
