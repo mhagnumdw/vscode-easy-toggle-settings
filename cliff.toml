@@ -12,6 +12,8 @@ header = """
 
 """
 # One section per release: "## [vX.Y.Z](compare link) (YYYY-MM-DD)" + groups (### Added/Fixed/...) + bullets.
+# The trailing blank line separates this release from the previous one; it is only emitted
+# when there is a previous release, so the file does not end with 2 blank lines (prettier fails).
 body = """
 {% if version -%}
     ## [{{ version }}]({% if previous.version %}<REPO>/compare/{{ previous.version }}...{{ version }}{% else %}<REPO>/tree/{{ version }}{% endif %}) ({{ timestamp | date(format="%Y-%m-%d") }})
@@ -23,7 +25,8 @@ body = """
     {% for commit in commits %}
         - {{ commit.raw_message | split(pat="\n") | first | trim }} ([{{ commit.id | truncate(length=8, end="") }}](<REPO>/commit/{{ commit.id }}))\
     {% endfor %}
-{% endfor %}\n
+{% endfor %}\
+{% if previous.version %}\n{% endif %}
 """
 trim = true
 # Run on the rendered release only (the entries kept below the header are left untouched)
