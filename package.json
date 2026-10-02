@@ -117,6 +117,6 @@
     "@types/sinon": "^22.0.0",
     "ovsx": "^1.1.1",
     "sinon": "^22.0.0",
-    "@vscode/vsce": "^3.7.1"
+    "@vscode/vsce": "^4.0.0"
   }
 }
