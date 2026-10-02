@@ -14,8 +14,13 @@ updates:
     cooldown:
       default-days: 7
     ignore:
+      # Type definitions must match the minimum VS Code version supported
       - dependency-name: "@types/vscode"
         versions: [">=1.80.0"]
+      # Type definitions must match the Node version pinned in .tool-versions,
+      # so bumping this major requires bumping .tool-versions in the same PR
+      - dependency-name: "@types/node"
+        versions: [">=23.0.0"]
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
